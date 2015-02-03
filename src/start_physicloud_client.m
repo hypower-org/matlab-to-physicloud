@@ -3,6 +3,6 @@
 %Sam Nelson
 %1/26/15
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-javaaddpath({'H:\coop\physicloud.jar'})
-import matlab.*
+javaaddpath({'physicloud-client.jar'})
+import physicloud.*
 pc = PhysiCloudClient
