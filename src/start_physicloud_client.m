@@ -3,6 +3,16 @@
 %Sam Nelson
 %1/26/15
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-javaaddpath({'physicloud-client.jar'})
-import physicloud.*
-pc = PhysiCloudClient
+
+%if octave.. static path already set, start pc
+if (exist ('OCTAVE_VERSION', 'builtin')) 
+    pc = javaObject ('physicloud.PhysiCloudClient')
+
+%if matlab, put jar on dpath, import, and start pc
+else
+    javaaddpath({'H:\coop\physicloud.jar'})
+    import matlab.*
+    pc = PhysiCloudClient
+end
+    
+    
