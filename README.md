@@ -12,6 +12,6 @@ The java class PhysiCloudClient communicates with the local instance of physiclo
 
 A series of matlab functions are also provided to hide type conversions and nasty "mat-java" syntax.  
 
-For more detailed documentation, visit the wiki
+For more detailed documentation, visit the [wiki](https://github.com/hypower-org/matlab-to-physicloud/wiki)
 
 
