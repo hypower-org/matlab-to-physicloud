@@ -1,17 +1,24 @@
-%function to hide java syntax while prepping cmd data for
-%physicloud
-%sam Nelson
-%1/26/15
+
+%  Author: Samuel <snelso15@ycp.edu>
+%  Created: 2015-02-10
+
+% function to hide java syntax while prepping data for
+% physicloud
+% args - array of numbers, length of array
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function[ids, x, y] = prep_vals(m_ids, m_x, m_y, num_agents)
-    ids = javaArray('java.lang.String', num_agents);
-    x = javaArray('java.lang.Double', num_agents);
-    y = javaArray('java.lang.Double', num_agents);
-    
-    for i = 1:num_agents
-        ids(i) = java.lang.String(m_ids{i});
-        x(i) = java.lang.Double(m_x{i});
-        y(i) = java.lang.Double(m_y{i});
+function[j_nums] = prep_vals(m_nums)
+    len = length(m_nums);
+    j_nums = javaArray('java.lang.Double', len);
+    %check to see if we are in Octave
+    if (exist ('OCTAVE_VERSION', 'builtin'))
+      for i = 1:len
+          j_nums(i) = javaObject ('java.lang.Double', m_nums(i));
+      end
+    %otherwise, in MATLAB
+    else
+      for i = 1:len
+        j_nums(i) = java.lang.Double(m_nums(i));
+      end
     end
 return 
