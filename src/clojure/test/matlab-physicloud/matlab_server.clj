@@ -1,4 +1,4 @@
-(ns physicloud.matlab-server
+(ns matlab-physicloud.matlab-server
   (:require [watershed.core :as w]
             [manifold.stream :as s]
             [manifold.deferred :as d]
