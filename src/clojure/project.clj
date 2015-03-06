@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [hypower-org/physicloud "0.2.0-SNAPSHOT"]
+                 [hypower-org/physicloud "0.2.0"]
                  [hypower-org/watershed "0.1.5"]
                  [manifold "0.1.0-beta10"]
                  [jkobuki "1.1.0"]
