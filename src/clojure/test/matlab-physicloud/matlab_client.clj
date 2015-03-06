@@ -22,14 +22,13 @@
             (println (str "caught exception: \"" (.getMessage e#) (.printStackTrace e#))))))))
 
 (defn -main []
-
-;	this agent's properties are loaded from a map in config.clj
-;	config map should look like:
-;	{:id  :robot1
-;	 :ip  "10.10.10.10"
-;	 :start-x 0
-;	 :start-y 0
-;	 :start-t 1.570796}
+	;	this agent's properties are loaded from a map in config.clj
+	;	config map should look like:
+	;	{:id  :robot1
+	;	 :ip  "10.10.10.10"
+	;	 :start-x 0
+	;	 :start-y 0
+	;	 :start-t 1.570796}
 	(def properties (load-file "config.clj"))
 	
 	(def spatial (new SpatialPhidget))
