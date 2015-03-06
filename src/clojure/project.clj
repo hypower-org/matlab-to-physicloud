@@ -10,8 +10,9 @@
                  [jkobuki "1.1.0"]
                  [phidget "1.0.0"]
                  [jssc "2.8.0"]]
-  :java-source-paths ["src/physicloud/PhysiCloudClient"]
-  :main matlab-physicloud.matlab-client
-  :aot [matlab-physicloud.matlab-client])
+  ;:java-source-paths ["src/physicloud/PhysiCloudClient"]
+  ;:main matlab-physicloud.matlab-client
+  ;:aot [matlab-physicloud.matlab-client]
+  )
  
  
