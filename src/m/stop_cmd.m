@@ -5,15 +5,17 @@
 %  args can be just the pc object, or a call array of id strings 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function[ret] = stop(pc, varargin)
+function[ret] = stop_cmd(pc, varargin)
   %if it was passed a second arg, and it is a cell array(presumably of id strings),
   %then call stop on those ids... otherwise, call stop on everyone
   
-  if length(varargin) > 0 && iscell(varargin{1})
+  if ~isempty(varargin) && iscell(varargin{1})
     ids = varargin{1};
     ids = prep_ids(ids);
-    ret = pc.stop(ids)
+    pc.stop(ids);
+    ret = 1;
   else
-    ret = pc.stop()
+    pc.stop()
+    ret = 1;
   end
 return 

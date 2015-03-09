@@ -4,6 +4,7 @@
 %  'field' arg should be passed as a string, either x, y, t, or 'all'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function[ret] = zero(pc, id, field)
-  ret = pc.zero(id, field);
+function[ret] = reset_state_vars(pc, id, field)
+  pc.zero(id, field);
+  ret = 1;
 return 
