@@ -7,11 +7,12 @@
                  [hypower-org/physicloud "0.2.0"]
                  [hypower-org/watershed "0.1.5"]
                  [manifold "0.1.0-beta10"]
-                 [jkobuki "1.1.0"]
-                 [phidget "1.0.0"]
-                 [jssc "2.8.0"]]
-  :main matlab-physicloud.matlab-client
-  :aot [matlab-physicloud.matlab-client]
+                 ;[jkobuki "1.1.0"]
+                 ;[phidget "1.0.0"]
+                 ;[jssc "2.8.0"]
+                 ]
+  ;:main matlab-physicloud.matlab-client
+  ;:aot [matlab-physicloud.matlab-client]
   )
  
  

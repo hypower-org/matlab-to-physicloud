@@ -3,7 +3,7 @@
             [manifold.stream :as s]
             [manifold.deferred :as d]
             [physicloud.core :as phy]
-            [physicloud.matlab :as ml])
+            [matlab-physicloud.matlab :as ml])
   (:use [physicloud.utils])
   (:import [java.net ServerSocket Socket SocketException]
            [java.io ObjectOutputStream ObjectInputStream]))
