@@ -91,6 +91,12 @@ public class PhysiCloudClient {
 		}
 		return data;
 	}
+	
+	//method for matlab to know how many agents are in the system
+	public int numAgents(){
+		return currentData.size();
+	}
+	
 	//method for MATLAB users to send a "go-to" command to a specific robot
     @Deprecated 
 	public void goTo(String robotId, Double xVal, Double yVal){
