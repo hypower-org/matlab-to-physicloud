@@ -1,10 +1,14 @@
-(ns matlab-physicloud.matlab-client
-  (:require [watershed.core :as w]
+(ns matlab-physicloud.ekf-client
+ (:require [watershed.core :as w]
             [manifold.stream :as s]
             [manifold.deferred :as d]
             [physicloud.core :as phy]
-            [matlab-physicloud.matlab :as ml])
-  (:use [physicloud.utils])
+            [matlab-physicloud.matlab :as ml]
+            [matlab-physicloud.ekf :as ekf]
+            [clojure.core.matrix :as mat])
+  (:use [physicloud.utils]
+        [incanter.core]
+        [incanter.charts])
   (:import [com.phidgets SpatialPhidget]
            [edu.ycp.robotics KobukiRobot]
            [java.util.concurrent Executors]
@@ -20,6 +24,8 @@
         (try ~@code 
           (catch Exception e# 
             (println (str "caught exception: \"" (.getMessage e#) (.printStackTrace e#))))))))
+
+
 
 (defn -main []
 	;	this agent's properties are loaded from a map in config.clj
@@ -48,9 +54,20 @@
 	
 	(def drive-vals (atom nil))
   (def zero-map (atom nil))
+  
+  (defn plot-progress [num-points]
+    (let [p (scatter-plot)]
+      (view p)
+      (future
+        (loop [idx num-points]
+          (add-points p [(:x @last-state)] [(:y @last-state)])
+          (Thread/sleep 100)
+          (if-not (<= idx 0)
+            (recur (dec idx)))))))
+  
 
 	(defn value-change [new-value, old-value] 
-	  "Computes the change between two values."
+	  "Computes the change between two encoder values."
 	  (cond 
 	    ;;forward rollover
 	    (< (- new-value old-value) -30000) 
@@ -70,47 +87,42 @@
 	        dr (* mpt (value-change cur-r prev-r))
 	        dc (/ (+ dr dl) 2)
 	        dt (/ (- dr dl) base-length)
-	        t (+ prev-theta dt)
-	        ;;if theta is more than 2pi, subtract 2pi 
-	        t (if (> t (* 2 pi)) (- t (* 2 pi)) t)
-	        ;;if theta is negative, convert to a positive value
-	        t (if (< t 0) (-(* 2 pi)(Math/abs t)) t)]
-	    
+	        t (+ prev-theta dt)]
 	    [cur-l 
        cur-r
 	     (+ prev-x (* dc (Math/cos prev-theta))) 
 	     (+ prev-y (* dc (Math/sin prev-theta)))
 	     t]))
 	  
-	;;currently just using gyro reading of imu
-	(defn imu-step [t-]
-	  (let [dt 0.02 ;use a time step of 20 msec
+	(defn imu-step [theta-]
+	  (let [dt 0.055 ;use a time step of 55 msec
 	        w (.getAngularRate spatial 2)
-	        delta-t (Math/toRadians (* w dt))
-	        t (+ t- delta-t)
-	        ;;if theta is more than 2pi, subtract 2pi 
-	        t (if (> t (* 2 pi)) (- t (* 2 pi)) t)
-	        ;;if theta is negative, convert to a positive value
-	        t (if (< t 0) (-(* 2 pi)(Math/abs t)) t)]
+	        delta-theta (Math/toRadians (* w dt))
+	        t (+ theta- delta-theta)]
 	    t))
 
 	(defn location-tracker []
-	  (loop [
+	 (Thread/sleep 100) ;to ensure first encoder packet is sent or else the first call to (.getLeftEncoder robot) returns 0 and causes problems!
+   (loop [
 	         prev-l (.getLeftEncoder robot)
 	         prev-r (.getRightEncoder robot)
 	         prev-x 0
 	         prev-y 0
-	         prev-theta (/ pi 2)]
-	    (Thread/sleep 20)
+	         prev-theta (/ pi 2)
+           P-  (mat/identity-matrix 3)]
+	    (Thread/sleep 50)
 	    (let [theta (imu-step prev-theta)
 	          [l r x y t] (odom prev-l prev-r prev-x prev-y prev-theta)
-	          ;;to find next theta estimate, average the odom theta and imu theta
-	          ;;in case of rollover, ie 2pi->0 rads, just use imu theta
-	          ;;so, if the difference between the two thetas is  less than pi,
-	          ;;just average them, else just use the imu theta
 	          theta (if(< (Math/abs (- t theta)) pi)
 	                    (/ (+ theta t) 2)
-	                    theta)]
+	                    theta)
+            [[kfx kfy kftheta] P] (ekf/extended-kalman-filter [(:x @last-state) (:y @last-state) (:t @last-state)] ;arg - state
+                                                              (if @drive-vals ;arg - control
+                                                                [(* 0.001 (:v @drive-vals)) (:w @drive-vals)]
+                                                                [0 0])
+                                                              [x y theta] ; measurements USING ODOM ONLY (t)
+                                                              P-)] ; last prediction covariance matx
+       
         ;;if a zero command was received, zero all keys that were in the zero map
         (if @zero-map
           (do
@@ -122,8 +134,8 @@
             (reset! zero-map nil))
           
           ;;otherwise, update normally.
-          (reset! last-state {:x x :y y :t theta}))
-	      (recur l r (:x @last-state) (:y @last-state) (:t @last-state)))))
+          (reset! last-state {:x kfx :y kfy :t kftheta}))
+	      (recur l r (:x @last-state) (:y @last-state) (:t @last-state) P))))
 	 
 
 	(defn stop-handler [cmd-map]
@@ -210,8 +222,6 @@
  
   (defn motor-controller []
     (loop []
-      (if (> (.getBumper robot) 0)
-        (reset! drive-vals nil))
       (if @drive-vals
         (.control robot (:v @drive-vals) (:w @drive-vals))
         (.control robot 0 0))
@@ -220,26 +230,26 @@
   
 	(on-pool exec (location-tracker))
   (on-pool exec (motor-controller))
-	(phy/physicloud-instance
-	     {:ip (:ip properties)
-	      :neighbors (:neighbors properties)
-	      :requires [:matlab-cmd] 
-	                 ;provides either state1, state2, or state3
-	      :provides [(keyword (str "state" (last (str (:id properties)))))]}
+	(on-pool exec (phy/physicloud-instance
+	                   {:ip (:ip properties)
+	                    :neighbors (:neighbors properties)
+	                    :requires [:matlab-cmd] 
+	                               ;provides either state1, state2, or state3
+	                    :provides [(keyword (str "state" (last (str (:id properties)))))]}
 	  
-	(w/vertex :control  
-	           [:matlab-cmd] 
-	           (fn [cmd-stream]
-	             (s/consume 
-	               (fn [cmd-map] (cmd-handler cmd-map))
-	               cmd-stream)))
+	              (w/vertex :control  
+	                         [:matlab-cmd] 
+	                         (fn [cmd-stream]
+	                           (s/consume 
+	                             (fn [cmd-map] (cmd-handler cmd-map))
+	                             cmd-stream)))
 	    
-	          ;this vertex is either :state1, :state2, or :state3
-	(w/vertex (keyword (str "state" (last (str (:id properties)))))
-	           [] 
-	           (fn [] 
-	             (s/periodically 
-	               1000 
-	               (fn [] (let [state-vec[(:x @last-state) (:y @last-state) (:t @last-state)]]
-                          state-vec)))))))
+	                        ;this vertex is either :state1, :state2, or :state3
+	              (w/vertex (keyword (str "state" (last (str (:id properties)))))
+	                         [] 
+	                         (fn [] 
+	                           (s/periodically 
+	                             500 
+	                             (fn [] (let [state-vec[(:x @last-state) (:y @last-state) (:t @last-state)]]
+                                        state-vec))))))))
 
