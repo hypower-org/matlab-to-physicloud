@@ -10,7 +10,7 @@ if (exist ('OCTAVE_VERSION', 'builtin'))
 
 %if matlab, put jar on dpath, import, and start pc
 else
-    javaaddpath({'H:\coop\octavematlab\physicloud.jar'})
+    javaaddpath({'physicloud.jar'})
     import edu.gatech.hypower.*
     pc = PhysiCloudClient
 end
