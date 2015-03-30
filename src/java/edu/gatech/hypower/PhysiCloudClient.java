@@ -77,13 +77,17 @@ public class PhysiCloudClient {
 	// a particular robot
 	@SuppressWarnings("unchecked")
 	public double[] getData(String id){
-		double[] data = new double[3];
+		double[] data = new double[7];
 		if(currentData != null){
 			if(currentData.containsKey(id)){
 				Vector<Double> robotState = (Vector<Double>) currentData.get(id);
 				data[0] = robotState.get(0).doubleValue();
 				data[1] = robotState.get(1).doubleValue();
 				data[2] = robotState.get(2).doubleValue();
+				data[3] = robotState.get(3).doubleValue();
+				data[4] = robotState.get(4).doubleValue();
+				data[5] = robotState.get(5).doubleValue();
+				data[6] = robotState.get(6).doubleValue();
 			}
 			else{
 				System.out.println("Error: Robot with that ID does not exist");
@@ -267,4 +271,53 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	//method for MATLAB users to toggle an led on a given set of robots
+	//color should be "red", "green", or "off" (technically any other string will work for "off")
+	public void led(String[] robotIds, int led, String color){
+		HashMap<String, Object> ledMap = new HashMap<String, Object>();
+		ledMap.put("command", "led");
+		Vector<String> ids = new Vector<String>();
+		for (int i = 0; i < robotIds.length; i++){
+			ids.add(robotIds[i]);
+		}
+		ledMap.put("ids", ids);
+		ledMap.put("led", led);
+		ledMap.put("color", color);
+		try {
+			out.writeObject(ledMap);
+		}
+		catch (IOException e) {e.printStackTrace();}
+	}
+	
+	//method for MATLAB users to play one of the pre-programmed sounds on the kobuki
+	//integer tag defines sound to be played:
+	//		0 for ON sound
+	//		1 for OFF sound
+	//		2 for RECHARGE sound
+	//		3 for BUTTON sound
+	//		4 for ERROR sound
+	//		5 for CLEANINGSTART sound
+	//		6 for CLEANINGEND sound
+	public void sound(String[] robotIds, int sound){
+		HashMap<String, Object> soundMap = new HashMap<String, Object>();
+		soundMap.put("command", "sound");
+		Vector<String> ids = new Vector<String>();
+		for (int i = 0; i < robotIds.length; i++){
+			ids.add(robotIds[i]);
+		}
+		soundMap.put("ids", ids);
+		soundMap.put("sound", sound);
+		try {
+			out.writeObject(soundMap);
+		}
+		catch (IOException e) {e.printStackTrace();}
+	}
 }
+
+
+
+
+
+
+
+

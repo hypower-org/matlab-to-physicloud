@@ -98,9 +98,9 @@
 	  (loop [
 	         prev-l (.getLeftEncoder robot)
 	         prev-r (.getRightEncoder robot)
-	         prev-x 0
-	         prev-y 0
-	         prev-theta (/ pi 2)]
+	         prev-x (:x @last-state)
+	         prev-y (:y @last-state)
+	         prev-theta (:t @last-state)]
 	    (Thread/sleep 20)
 	    (let [theta (imu-step prev-theta)
 	          [l r x y t] (odom prev-l prev-r prev-x prev-y prev-theta)
@@ -109,7 +109,7 @@
 	          ;;so, if the difference between the two thetas is  less than pi,
 	          ;;just average them, else just use the imu theta
 	          theta (if(< (Math/abs (- t theta)) pi)
-	                    (/ (+ theta t) 2)
+	                    theta;(/ (+ theta t) 2)
 	                    theta)]
         ;;if a zero command was received, zero all keys that were in the zero map
         (if @zero-map
@@ -164,7 +164,7 @@
          (if v 
            (reset! drive-vals {:v v :w w})))))
 	
-
+ 
 	(defn zero-handler [cmd-map]
 	"the zero command map should look something like this:
 		{:command zero
@@ -179,13 +179,60 @@
 	        x (:x cmd-map)
 	        y (:y cmd-map)
 	        t (:t cmd-map)
-	        my-id-str (name (:id properties))]
-	     (if ids
-		    ;;if some ids are sent, see if my id is in the list to zero
-		     (if (some (fn [x] (= my-id-str x)) ids)
-	         (reset! zero-map (dissoc cmd-map :command :ids)))
-		    ;;if no ids sent, all bots should zero
-		     (reset! zero-map (dissoc cmd-map :command :ids)))))
+	        my-id-str (name (:id properties))
+          ;;determine if local agent should execute command
+          me? (if-not ids 
+                true
+                (some (fn [x] (= my-id-str x)) ids))]
+      (if me? 
+	      (reset! zero-map (dissoc cmd-map :command :ids)))))
+ 
+ 
+ (defn led-handler [cmd-map]
+	"the led command map should look something like this:
+		{:command led
+		 :ids [robot1]
+		 :led 1
+     :color green}"
+   (let [ids (:ids cmd-map)
+         color (:color cmd-map)
+         led (:led cmd-map)
+         my-id-str (name (:id properties))
+         ;;determine if local agent should execute command
+         me? (if-not ids
+               true
+               (some (fn [x] (= my-id-str x)) ids))]
+     (if me?
+       (case 
+         (and (= color "red") (= led 1))
+         (.setLed robot 1)
+       
+         (and (= color "green") (= led 1))
+         (.setLed robot 2)
+       
+         (and (= color "red") (= led 2))
+         (.setLed robot 3)
+       
+         (and (= color "green") (= led 2))
+         (.setLed robot 4)
+       
+         ;default - any other led command map will turn off both led's
+         :else 
+         (.setLed robot 0)))))
+ 
+ (defn sound-handler [cmd-map]
+	"the led command map should look something like this:
+		{:command sound
+		 :ids [robot1]
+		 :sound 1 }"
+   (let [sound (:sound cmd-map)
+         my-id-str (name (:id properties))
+         ;;determine if local agent should execute command
+         me? (if-not ids 
+               true
+               (some (fn [x] (= my-id-str x)) ids))]
+     (if me? 
+       (.soundSequence robot sound))))
 	 
 
 	(defn cmd-handler [cmd-map]
@@ -201,6 +248,12 @@
 	     
 		    (= cmd "zero")
 		    (zero-handler cmd-map)
+      
+        (= cmd "led")
+		    (led-handler cmd-map)
+      
+        (= cmd "sound")
+		    (sound-handler cmd-map)
 	     
 		    :else
 		    (do
@@ -220,6 +273,7 @@
   
 	(on-pool exec (location-tracker))
   (on-pool exec (motor-controller))
+  
 	(phy/physicloud-instance
 	     {:ip (:ip properties)
 	      :neighbors (:neighbors properties)
@@ -233,13 +287,18 @@
 	             (s/consume 
 	               (fn [cmd-map] (cmd-handler cmd-map))
 	               cmd-stream)))
-	    
 	          ;this vertex is either :state1, :state2, or :state3
 	(w/vertex (keyword (str "state" (last (str (:id properties)))))
 	           [] 
 	           (fn [] 
 	             (s/periodically 
-	               1000 
-	               (fn [] (let [state-vec[(:x @last-state) (:y @last-state) (:t @last-state)]]
+	               100
+	               (fn [] (let [state-vec[(:x @last-state) 
+                                        (:y @last-state) 
+                                        (:t @last-state)
+                                        (.getbumper robot)
+                                        (.getCliff robot)
+                                        (.getBattery robot)
+                                        (.getButton robot)]]
                           state-vec)))))))
 
