@@ -58,7 +58,7 @@
                          state-vec-2]] 
                      (let [system-state-map (java.util.HashMap. 
                                               {"robot1" (java.util.Vector. state-vec-1) 
-                                               "robot2" (java.util.Vector.  state-vec-2)})]
+                                               "robot2" (java.util.Vector. state-vec-2)})]
                        system-state-map))
                    (apply s/zip state-streams)))) 
       
