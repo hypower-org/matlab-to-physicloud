@@ -69,7 +69,7 @@ public class PhysiCloudClient {
 			}
 			catch (IOException e) {
 				System.out.println("Server not up...");
-				Thread.sleep(1000);
+				Thread.sleep(2500);
 			}
 		}
 	}

@@ -203,7 +203,7 @@
                true
                (some (fn [x] (= my-id-str x)) ids))]
      (if me?
-       (case 
+       (cond 
          (and (= color "red") (= led 1))
          (.setLed robot 1)
        
@@ -225,7 +225,8 @@
 		{:command sound
 		 :ids [robot1]
 		 :sound 1 }"
-   (let [sound (:sound cmd-map)
+   (let [ids (:ids cmd-map)
+         sound (:sound cmd-map)
          my-id-str (name (:id properties))
          ;;determine if local agent should execute command
          me? (if-not ids 
@@ -268,7 +269,7 @@
       (if @drive-vals
         (.control robot (:v @drive-vals) (:w @drive-vals))
         (.control robot 0 0))
-      (Thread/sleep 50);;issue new motor command every 1/20 of a second
+      (Thread/sleep 50);;issue new motor command every 50 milliseconds
       (recur)))
   
 	(on-pool exec (location-tracker))
@@ -296,7 +297,7 @@
 	               (fn [] (let [state-vec[(:x @last-state) 
                                         (:y @last-state) 
                                         (:t @last-state)
-                                        (.getbumper robot)
+                                        (.getBumper robot)
                                         (.getCliff robot)
                                         (.getBattery robot)
                                         (.getButton robot)]]

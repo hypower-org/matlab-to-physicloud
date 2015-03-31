@@ -32,20 +32,20 @@
                                                        (println "Sending command: " cmd-map)
                                                        cmd-map))))))
                                                        
-    ;;buld system-state vertex depnding on how many robots are in system
+    ;;build system-state vertex depending on how many robots are in system
     (cond
       (= neighbors 4)
       (w/vertex :system-state 
                [:state1 :state2 :state3]
                (fn [& state-streams] 
                  (s/map 
-                   (fn [[[x1 y1 theta1]
-                         [x2 y2 theta2]
-                         [x3 y3 theta3]]] 
+                   (fn [[state-vec-1
+                         state-vec-2
+                         state-vec-3]] 
                      (let [system-state-map (java.util.HashMap. 
-                                              {"robot1" (java.util.Vector. [x1 y1 theta1]) 
-                                               "robot2" (java.util.Vector. [x2 y2 theta2]) 
-                                               "robot3" (java.util.Vector. [x3 y3 theta3])})]
+                                              {"robot1" (java.util.Vector. state-vec-1) 
+                                               "robot2" (java.util.Vector. state-vec-2) 
+                                               "robot3" (java.util.Vector. state-vec-3)})]
                        system-state-map))
                    (apply s/zip state-streams))))
       
@@ -54,11 +54,11 @@
                [:state1 :state2]
                (fn [& state-streams] 
                  (s/map 
-                   (fn [[[x1 y1 theta1]
-                         [x2 y2 theta2]]] 
+                   (fn [[state-vec-1
+                         state-vec-2]] 
                      (let [system-state-map (java.util.HashMap. 
-                                              {"robot1" (java.util.Vector. [x1 y1 theta1]) 
-                                               "robot2" (java.util.Vector. [x2 y2 theta2])})]
+                                              {"robot1" (java.util.Vector. state-vec-1) 
+                                               "robot2" (java.util.Vector.  state-vec-2)})]
                        system-state-map))
                    (apply s/zip state-streams)))) 
       
@@ -67,9 +67,9 @@
 	              [:state1]
 	              (fn [state-stream] 
 	                (s/map 
-	                  (fn [[x1 y1 theta1]] 
+	                  (fn [state-vec-1] 
 	                    (let [system-state-map (java.util.HashMap. 
-	                                             {"robot1" (java.util.Vector. [x1 y1 theta1])})]
+	                                             {"robot1" (java.util.Vector. state-vec-1)})]
 	                      system-state-map))
 	                  state-stream))))
   
