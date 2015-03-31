@@ -6,7 +6,7 @@
 
 %if octave.. static path already set, start pc
 if (exist ('OCTAVE_VERSION', 'builtin')) 
-    pc = javaObject ('physicloud.PhysiCloudClient')
+    pc = javaObject ('edu.gatech.hypower.PhysiCloudClient')
 
 %if matlab, put jar on dpath, import, and start pc
 else
