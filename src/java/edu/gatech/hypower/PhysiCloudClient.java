@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 public class PhysiCloudClient {
+	
 	//fields -
 	private Thread worker; //thread for doing the work
 	private volatile boolean stopRequested; //boolean for stopping thread gracefully
@@ -16,6 +17,7 @@ public class PhysiCloudClient {
 	private ObjectOutputStream out; //object out stream for reading objects from the Physicloud network
 	private ObjectInputStream in; //object in stream for writing objects to the Physicloud network
 	private ConcurrentHashMap<String, Object> currentData; //concurrent map for incoming data
+	
 	//constructor - start worker thread in boolean-dependent loop
 	public PhysiCloudClient(){
 		currentData = new ConcurrentHashMap<String, Object>();
@@ -39,6 +41,7 @@ public class PhysiCloudClient {
 		catch (InterruptedException e) {e.printStackTrace();}
 		worker.start();
 	}
+	
 	//method for gracefully ending worker thread
 	public void kill(){
 		stopRequested = true;
@@ -46,6 +49,7 @@ public class PhysiCloudClient {
 			worker.interrupt();
 		}
 	}
+	
 	//method to receive data from physicloud network and update
 	//concurrent data structure
 	@SuppressWarnings("unchecked")
@@ -57,6 +61,7 @@ public class PhysiCloudClient {
 		catch (ClassNotFoundException e) {e.printStackTrace();}
 		catch (IOException e) {}
 	}
+	
 	//utility method for connecting TCP client
 	private void connectToPhysiCloud() throws InterruptedException{
 		Boolean connected = false;
@@ -73,6 +78,7 @@ public class PhysiCloudClient {
 			}
 		}
 	}
+	
 	//method for MATLAB users to get the state data of
 	// a particular robot
 	@SuppressWarnings("unchecked")
@@ -101,36 +107,6 @@ public class PhysiCloudClient {
 		return currentData.size();
 	}
 	
-	//method for MATLAB users to send a "go-to" command to a specific robot
-    @Deprecated 
-	public void goTo(String robotId, Double xVal, Double yVal){
-		HashMap<String, Object> locationMap = new HashMap<String, Object>();
-		locationMap.put("command", "go-to");
-		Vector<Double> locations = new Vector<Double>(2);
-		locations.add(0, xVal);
-		locations.add(1, yVal);
-		locationMap.put(robotId, locations);
-		try {
-			out.writeObject(locationMap);
-		}
-		catch (IOException e) {e.printStackTrace();}
-	}
-    @Deprecated
-	//method for MATLAB users to send a "go-to" command to a variable number of robots
-	public void goTo(String[] robotIds, Double[] xVals, Double[] yVals){
-		HashMap<String, Object> locationMap = new HashMap<String, Object>();
-		for (int i = 0; i < robotIds.length; i++){
-			Vector<Double> locations = new Vector<Double>(2);
-			locations.add(0, xVals[i]);
-			locations.add(1, yVals[i]);
-			locationMap.put(robotIds[i], locations);
-		}
-		locationMap.put("command", "go-to");
-		try {
-			out.writeObject(locationMap);
-		}
-		catch (IOException e) {e.printStackTrace();}
-	}
 	//method for MATLAB users to stop all robots' movement
 	public void stop(){
 		HashMap<String, Object> stopMap = new HashMap<String, Object>();
@@ -140,6 +116,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to stop a specific robot's movement
 	public void stop(String robotId){
 		HashMap<String, Object> stopMap = new HashMap<String, Object>();
@@ -152,6 +129,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to stop a given set of robots' movement
 	public void stop(String[] robotIds){
 		HashMap<String, Object> stopMap = new HashMap<String, Object>();
@@ -166,6 +144,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to drive all robots at v, w
 	public void drive(Double v, Double w){
 		HashMap<String, Object> driveMap = new HashMap<String, Object>();
@@ -177,6 +156,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to drive a specific robot at v, w
 	public void drive(String robotId, Double v, Double w){
 		HashMap<String, Object> driveMap = new HashMap<String, Object>();
@@ -190,6 +170,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to drive a given set of robots at v, w
 	public void drive(String[] robotIds, Double v, Double w){
 		HashMap<String, Object> driveMap = new HashMap<String, Object>();
@@ -205,6 +186,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to drive a given set of robots at different v, w values
 	public void drive(String[] robotIds, Double[] vs, Double[] ws){
 		HashMap<String, Object> driveMap = new HashMap<String, Object>();
@@ -220,6 +202,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to zero a specified state variable (x, y, t) for a specific robot
 	//pass "all" as var to zero all state variables (zero-ing theta puts it at pi/2)
 	public void zero(String robotId, String var){
@@ -247,6 +230,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to zero a specified state variable (x, y, t) for all robots
 	//pass "all" as var to zero all state variables (zero-ing theta puts it at pi/2)
 	public void zero(String var){
@@ -271,6 +255,7 @@ public class PhysiCloudClient {
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
+	
 	//method for MATLAB users to toggle an led on a given set of robots
 	//color should be "red", "green", or "off" (technically any other string will work for "off")
 	public void led(String[] robotIds, int led, String color){
