@@ -90,10 +90,10 @@ public class PhysiCloudClient {
 				data[0] = (double) robotState.get(0);
 				data[1] = (double) robotState.get(1);
 				data[2] = (double) robotState.get(2);
-				data[3] = (double) robotState.get(3);
-				data[4] = (double) robotState.get(4);
-				data[5] = (double) robotState.get(5);
-				data[6] = (double) robotState.get(6);
+				data[3] = ((Integer) robotState.get(3)).doubleValue();
+				data[4] = ((Integer) robotState.get(4)).doubleValue();
+				data[5] = ((Integer) robotState.get(5)).doubleValue();
+				data[6] = ((Integer) robotState.get(6)).doubleValue();
 			}
 			else{
 				System.out.println("Error: Robot with that ID does not exist");
