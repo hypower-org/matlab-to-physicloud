@@ -9,9 +9,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function[ret] = led_cmd(pc, ids, led, color)
-  if led ~= 1 & led ~=2
+  if (led ~= 1 && led ~=2)
     disp('ERROR:  LED must be 1 or 2');
-  else if ~strcmp('red', color) & ~strcmp('green', color) & ~strcmp('off', color)
+  elseif (~strcmp('red', color) && ~strcmp('green', color) && ~strcmp('off', color))
     disp('ERROR: color must be "red", "green", or "off"');
   else
     pc.led(ids, led, color);

@@ -15,10 +15,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function[ret] = sound_cmd(pc, ids, sound)
-  if sound < 0 | sound > 6 
+  if (sound < 0 || sound > 6)
     disp('ERROR: sound tag must be integer in rage 0-6');
   else
-    pc.led(ids, led, color);
+    pc.sound(ids, sound);
     ret = 1;
   end
 return 
