@@ -3,13 +3,51 @@
             [manifold.stream :as s]
             [manifold.deferred :as d]
             [physicloud.core :as phy]
-            [matlab-physicloud.matlab :as ml])
-  (:use [physicloud.utils])
+            [matlab-physicloud.matlab :as ml]
+            [physicloud.utils :as util])
+  (:use [seesaw.core]
+        [seesaw.font])
   (:import [java.net ServerSocket Socket SocketException]
-           [java.io ObjectOutputStream ObjectInputStream]))
+           [java.io ObjectOutputStream ObjectInputStream])
+  (:gen-class))
 
 (defn -main 
-  [ip neighbors]
+  [ip ns]
+  
+  (def neighbors (load-string ns))
+  
+  (def connection-status (atom 0))
+  
+  (native!)
+  (future
+    (let [progress (progress-bar :min 0 :max 100 :value 0 :bounds [10 60 380 40])
+          frame (frame 
+                  :title "PhysiCloud Notification" 
+                  :resizable? false
+                  :on-close :nothing
+                  :content  
+                     (xyz-panel 
+                      :items 
+                        [(label 
+                           :text "Please wait while PhysiCloud establishes network..."
+                           :font (font :name :sans-serif :style :bold :size 12)
+                           :background java.awt.Color/LIGHT_GRAY
+                           :visible?  true
+                           :bounds [10 10 380 40])
+                         progress]
+                       :background java.awt.Color/LIGHT_GRAY))]
+      (.setAlwaysOnTop frame true)
+      (.setLocation frame 300 300)
+      (.setSize frame 400 140)
+      (show! frame)
+      (loop []
+        (if-not @connection-status
+          (dispose! frame)
+          (do 
+            (swap! connection-status inc)
+            (.setValue progress @connection-status)
+            (Thread/sleep 100) 
+            (recur))))))
   
   (ml/start-server)
 
@@ -24,12 +62,13 @@
                       (= neighbors 2)
                       [:state1])
                       
-          :provides [:matlab-cmd]}
+          :provides [:matlab-cmd]
+          :output-preference 2}
   
     (w/vertex :matlab-cmd 
                [] 
                (fn [] (s/->source (repeatedly (fn [] (let [cmd-map (ml/to-clj-map (. ml/in readObject))]
-                                                       (println "Sending command: " cmd-map)
+                                                       (util/pc-println "Sending command: " cmd-map)
                                                        cmd-map))))))
                                                        
     ;;build system-state vertex depending on how many robots are in system
@@ -77,7 +116,8 @@
                [:system-state] 
                (fn [state-stream] 
                  (s/consume 
-                   (fn [state-map]; (println "Server: pushing data: " state-map)
+                   (fn [state-map]
+                     (if @connection-status (reset! connection-status false))
                      (ml/write-data state-map)) 
                    state-stream)))))
 

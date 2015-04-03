@@ -12,17 +12,17 @@
 ; the programming of the PhysiCloud enabled CPS through Matlab.
 
 (defn- connect [server]
-  (println "Waiting for matlab client to connect")
+  (println "Waiting for MATLAB client to connect")
   (try (. server accept)
        (catch SocketException e)))
 
 (defn start-server []
-  (println "Starting server...")
+  (println "Starting MATLAB server...")
   (let [server (new ServerSocket 8756)
         client (connect server)]
     (def out (new ObjectOutputStream (. client getOutputStream)))
     (def in (new ObjectInputStream (. client getInputStream)))
-    (println "Connected to matlab physiclient")))
+    (println "Connected to MATLAB physiclient")))
 
 (defn write-data [state-map]
   (. out writeObject state-map)) 
