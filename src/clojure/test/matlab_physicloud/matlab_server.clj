@@ -16,8 +16,6 @@
   
   (def neighbors (load-string ns))
   
-  (util/initialize-printer 2) ;(2) - print output to physicloud console
-  
   (def connection-status (atom 0))
   
   (native!)
@@ -38,9 +36,10 @@
                            :bounds [10 10 380 40])
                          progress]
                        :background java.awt.Color/LIGHT_GRAY))]
-      (show! frame)
+      (.setAlwaysOnTop frame true)
       (.setLocation frame 300 300)
       (.setSize frame 400 140)
+      (show! frame)
       (loop []
         (if-not @connection-status
           (dispose! frame)
