@@ -12,7 +12,9 @@
   (:gen-class))
 
 (defn -main 
-  [ip neighbors]
+  [ip ns]
+  
+  (def neighbors (load-string ns))
   
   (util/initialize-printer 2) ;(2) - print output to physicloud console
   (def connecting? (atom true))
