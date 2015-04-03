@@ -3,8 +3,7 @@
             [manifold.stream :as s]
             [manifold.deferred :as d]
             [byte-streams :as b]
-            [watershed.core :as w]
-            [physicloud.utils :as util]))
+            [watershed.core :as w]))
 
 (import '(java.net ServerSocket Socket SocketException)
         '(java.io ObjectOutputStream ObjectInputStream))
@@ -13,17 +12,17 @@
 ; the programming of the PhysiCloud enabled CPS through Matlab.
 
 (defn- connect [server]
-  (util/pc-println "Waiting for MATLAB client to connect")
+  (println "Waiting for MATLAB client to connect")
   (try (. server accept)
        (catch SocketException e)))
 
 (defn start-server []
-  (util/pc-println "Starting MATLAB server...")
+  (println "Starting MATLAB server...")
   (let [server (new ServerSocket 8756)
         client (connect server)]
     (def out (new ObjectOutputStream (. client getOutputStream)))
     (def in (new ObjectInputStream (. client getInputStream)))
-    (util/pc-println "Connected to MATLAB physiclient")))
+    (println "Connected to MATLAB physiclient")))
 
 (defn write-data [state-map]
   (. out writeObject state-map)) 

@@ -17,21 +17,36 @@
   (def neighbors (load-string ns))
   
   (util/initialize-printer 2) ;(2) - print output to physicloud console
-  (def connecting? (atom true))
-  (future 
-    (let [frame (frame :title "PhysiCloud Notification"
-                     :minimum-size [200 :by 100]
-                     :content  (label :text "Please wait while physicloud network is established..."
-                                      :font (font :name :sans-serif :style :bold :size 14)
-                                      :background java.awt.Color/LIGHT_GRAY)
-                     :visible?  true
-                     :on-close :nothing)]
-      (pack! frame)
+  
+  (def connection-status (atom 0))
+  
+  (native!)
+  (future
+    (let [progress (progress-bar :min 0 :max 100 :value 0 :bounds [10 60 380 40])
+          frame (frame 
+                  :title "PhysiCloud Notification" 
+                  :resizable? false
+                  :on-close :nothing
+                  :content  
+                     (xyz-panel 
+                      :items 
+                        [(label 
+                           :text "Please wait while PhysiCloud establishes network..."
+                           :font (font :name :sans-serif :style :bold :size 12)
+                           :background java.awt.Color/LIGHT_GRAY
+                           :visible?  true
+                           :bounds [10 10 380 40])
+                         progress]
+                       :background java.awt.Color/LIGHT_GRAY))]
       (show! frame)
+      (.setLocation frame 300 300)
+      (.setSize frame 400 140)
       (loop []
-        (if-not @connecting?
+        (if-not @connection-status
           (dispose! frame)
           (do 
+            (swap! connection-status inc)
+            (.setValue progress @connection-status)
             (Thread/sleep 100) 
             (recur))))))
   
@@ -103,7 +118,7 @@
                (fn [state-stream] 
                  (s/consume 
                    (fn [state-map]
-                     (if @connecting? (reset! connecting? false))
+                     (if @connection-status (reset! connection-status false))
                      (ml/write-data state-map)) 
                    state-stream)))))
 

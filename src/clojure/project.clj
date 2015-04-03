@@ -12,10 +12,8 @@
                  ;[jkobuki "1.2.0"]
                  ;[phidget "1.0.0"]
                  ;[jssc "2.8.0"]
-                 [seesaw "1.4.5"]
-                 ]
+                 [seesaw "1.4.5"]]
   :main matlab-physicloud.matlab-server
-  :aot [matlab-physicloud.matlab-server]
-  )
+  :aot [matlab-physicloud.matlab-server])
  
  
