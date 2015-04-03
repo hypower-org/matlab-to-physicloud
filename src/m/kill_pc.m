@@ -4,3 +4,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 pc.kill;
+j_process.destroy;
+
+disp('Killed the Octave-Java client and PhysiCloud server')
