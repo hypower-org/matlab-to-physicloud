@@ -32,7 +32,7 @@
 	(def properties (load-file "config.clj"))
 	
 	(def spatial (new SpatialPhidget))
-	(print "waiting on imu attachment...")
+	(println "waiting on imu attachment...")
 	(.openAny spatial)
 	(.waitForAttachment spatial)
 	(println "ok")
@@ -280,7 +280,8 @@
 	      :neighbors (:neighbors properties)
 	      :requires [:matlab-cmd] 
 	                 ;provides either state1, state2, or state3
-	      :provides [(keyword (str "state" (last (str (:id properties)))))]}
+	      :provides [(keyword (str "state" (last (str (:id properties)))))]
+        :output-preference 3}
 	  
 	(w/vertex :control  
 	           [:matlab-cmd] 
