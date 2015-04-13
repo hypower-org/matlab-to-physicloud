@@ -1,5 +1,5 @@
-(ns matlab-physicloud.matlab-client
-  (:require [watershed.core :as w]
+(ns matlab-physicloud.moving-imu-client
+   (:require [watershed.core :as w]
             [manifold.stream :as s]
             [manifold.deferred :as d]
             [physicloud.core :as phy]
@@ -95,8 +95,7 @@
 	    t))
 
 	(defn location-tracker []
-	  (loop [
-	         prev-l (.getLeftEncoder robot)
+	  (loop [prev-l (.getLeftEncoder robot)
 	         prev-r (.getRightEncoder robot)
 	         prev-x (:x @last-state)
 	         prev-y (:y @last-state)
@@ -108,9 +107,12 @@
 	          ;;in case of rollover, ie 2pi->0 rads, just use imu theta
 	          ;;so, if the difference between the two thetas is  less than pi,
 	          ;;just average them, else just use the imu theta
-	          theta (if(< (Math/abs (- t theta)) pi)
-	                    theta;(/ (+ theta t) 2)
-	                    theta)]
+	          theta (if (and @drive-vals (not (= (:v @drive-vals) 0)) (not (= (:w @drive-vals) 0))) ;if robot is driving, average them, else use odom
+                    (if(< (Math/abs (- t theta)) pi)
+	                       (+ (* 0.7 theta)(* 0.3 t)) ;weighted average trusting imu 
+	                       theta)
+                    t) ;if not driving, use odometry theta (will be most precise)
+                    ]
         ;;if a zero command was received, zero all keys that were in the zero map
         (if @zero-map
           (do
@@ -240,8 +242,7 @@
 		(let [cmd (:command cmd-map)]
 		  (println "COMMAND RECEIVED: " cmd)
 		  (cond
-	     
-		    (= cmd "stop")
+	      (= cmd "stop")
 		    (stop-handler cmd-map)
 	     
 		    (= cmd "drive")
@@ -303,4 +304,6 @@
                                         (.getBattery robot)
                                         (.getButton robot)]]
                           state-vec)))))))
+
+
 
