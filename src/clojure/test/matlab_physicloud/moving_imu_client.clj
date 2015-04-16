@@ -47,7 +47,7 @@
 	(def last-state (atom {:x (:start-x properties) :y (:start-y properties) :t (:start-t properties)}))
 	
 	(def drive-vals (atom nil))
-  (def zero-map (atom nil))
+  (def reset-coords-map (atom nil))
 
 	(defn value-change [new-value, old-value] 
 	  "Computes the change between two values."
@@ -113,18 +113,17 @@
 	                       theta)
                     t) ;if not driving, use odometry theta (will be most precise)
                     ]
-        ;;if a zero command was received, zero all keys that were in the zero map
-        (if @zero-map
+         ;;if a reset-coords command was received, do it
+        (if @reset-coords-map
           (do
-            (doseq [key (keys @zero-map)]
-              (if (contains? @last-state key)
-                (if-not (= key :t)
-                  (swap! last-state assoc key 0)
-                  (swap! last-state assoc key 1.570796))))
-            (reset! zero-map nil))
+            (reset! last-state {:x (:x @reset-coords-map) 
+                                :y (:y @reset-coords-map) 
+                                :t (:t @reset-coords-map)})
+            (reset! reset-coords-map nil))
           
           ;;otherwise, update normally.
           (reset! last-state {:x x :y y :t theta}))
+        
 	      (recur l r (:x @last-state) (:y @last-state) (:t @last-state)))))
 	 
 
@@ -167,12 +166,13 @@
            (reset! drive-vals {:v v :w w})))))
 	
  
-	(defn zero-handler [cmd-map]
-	"the zero command map should look something like this:
-		{:command zero
+ (defn reset-coords-handler [cmd-map]
+	"the reset-coords command map should look something like this:
+		{:command reset-coords
 		 :ids [robot1]
-		 :x zero
-		 :y zero}
+		 :x 0
+		 :y 0
+     :t 0}
 		if no zero command is sent for a specific robot, its id is omitted from the ids vector
 		if all robots should zero, ids key is omitted from map
 		any variables that should be zero-ed will be in the map as keys"
@@ -187,7 +187,7 @@
                 true
                 (some (fn [x] (= my-id-str x)) ids))]
       (if me? 
-	      (reset! zero-map (dissoc cmd-map :command :ids)))))
+	      (reset! reset-coords-map (dissoc cmd-map :command :ids)))))
  
  
  (defn led-handler [cmd-map]
@@ -248,8 +248,8 @@
 		    (= cmd "drive")
 		    (drive-handler cmd-map)
 	     
-		    (= cmd "zero")
-		    (zero-handler cmd-map)
+        (= cmd "reset-coords")
+        (reset-coords-handler cmd-map)
       
         (= cmd "led")
 		    (led-handler cmd-map)

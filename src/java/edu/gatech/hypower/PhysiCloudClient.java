@@ -203,55 +203,18 @@ public class PhysiCloudClient {
 		catch (IOException e) {e.printStackTrace();}
 	}
 	
-	//method for MATLAB users to zero a specified state variable (x, y, t) for a specific robot
-	//pass "all" as var to zero all state variables (zero-ing theta puts it at pi/2)
-	public void zero(String robotId, String var){
-		HashMap<String, Object> zeroMap = new HashMap<String, Object>();
-		zeroMap.put("command", "zero");
+	//method for MATLAB users to reset a specified state variable (x, y, t) for a specific robot
+	public void resetCoords(String robotId, Double[] coords){
+		HashMap<String, Object> resetCoordsMap = new HashMap<String, Object>();
+		resetCoordsMap.put("command", "reset-coords");
 		Vector<String> ids = new Vector<String>();
 		ids.add(robotId);
-		zeroMap.put("ids", ids);
-		if(var.toLowerCase().equals("x")){
-			zeroMap.put("x", "zero");
-		}
-		if(var.toLowerCase().equals("y")){
-			zeroMap.put("y", "zero");
-		}
-		if(var.toLowerCase().equals("t")){
-			zeroMap.put("t", "zero");
-		}
-		if(var.toLowerCase().equals("all")){
-			zeroMap.put("x", "zero");
-			zeroMap.put("y", "zero");
-			zeroMap.put("t", "zero");
-		}
+		resetCoordsMap.put("ids", ids);
+		resetCoordsMap.put("x", coords[0]);
+		resetCoordsMap.put("y", coords[1]);
+		resetCoordsMap.put("t", coords[2]);
 		try {
-			out.writeObject(zeroMap);
-		}
-		catch (IOException e) {e.printStackTrace();}
-	}
-	
-	//method for MATLAB users to zero a specified state variable (x, y, t) for all robots
-	//pass "all" as var to zero all state variables (zero-ing theta puts it at pi/2)
-	public void zero(String var){
-		HashMap<String, Object> zeroMap = new HashMap<String, Object>();
-		zeroMap.put("command", "zero");
-		if(var.toLowerCase().equals("x")){
-			zeroMap.put("x", "zero");
-		}
-		if(var.toLowerCase().equals("y")){
-			zeroMap.put("y", "zero");
-		}
-		if(var.toLowerCase().equals("t")){
-			zeroMap.put("t", "zero");
-		}
-		if(var.toLowerCase().equals("all")){
-			zeroMap.put("x", "zero");
-			zeroMap.put("y", "zero");
-			zeroMap.put("t", "zero");
-		}
-		try {
-			out.writeObject(zeroMap);
+			out.writeObject(resetCoordsMap);
 		}
 		catch (IOException e) {e.printStackTrace();}
 	}
