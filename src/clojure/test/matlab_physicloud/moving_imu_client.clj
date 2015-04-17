@@ -94,6 +94,7 @@
 	        t (if (< t 0) (-(* 2 pi)(Math/abs t)) t)]
 	    t))
 
+  
 	(defn location-tracker []
 	  (loop [prev-l (.getLeftEncoder robot)
 	         prev-r (.getRightEncoder robot)
@@ -172,11 +173,8 @@
 		 :ids [robot1]
 		 :x 0
 		 :y 0
-     :t 0}
-		if no zero command is sent for a specific robot, its id is omitted from the ids vector
-		if all robots should zero, ids key is omitted from map
-		any variables that should be zero-ed will be in the map as keys"
-	 
+     :t 0}"
+	  (.zeroGyro spatial)
 	  (let[ids (:ids cmd-map)
 	        x (:x cmd-map)
 	        y (:y cmd-map)

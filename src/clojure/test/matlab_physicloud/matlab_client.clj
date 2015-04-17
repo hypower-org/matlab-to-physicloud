@@ -47,7 +47,7 @@
 	(def last-state (atom {:x (:start-x properties) :y (:start-y properties) :t (:start-t properties)}))
 	
 	(def drive-vals (atom nil))
-  (def zero-map (atom nil))
+  (def reset-coords-map (atom nil))
 
 	(defn value-change [new-value, old-value] 
 	  "Computes the change between two values."
@@ -84,7 +84,7 @@
 	  
 	;;currently just using gyro reading of imu
 	(defn imu-step [t-]
-	  (let [dt 0.02 ;use a time step of 20 msec
+	  (let [dt 0.023 ;use a time step of 23 msec
 	        w (.getAngularRate spatial 2)
 	        delta-t (Math/toRadians (* w dt))
 	        t (+ t- delta-t)
@@ -95,8 +95,7 @@
 	    t))
 
 	(defn location-tracker []
-	  (loop [
-	         prev-l (.getLeftEncoder robot)
+	  (loop [prev-l (.getLeftEncoder robot)
 	         prev-r (.getRightEncoder robot)
 	         prev-x (:x @last-state)
 	         prev-y (:y @last-state)
@@ -109,20 +108,19 @@
 	          ;;so, if the difference between the two thetas is  less than pi,
 	          ;;just average them, else just use the imu theta
 	          theta (if(< (Math/abs (- t theta)) pi)
-	                    theta;(/ (+ theta t) 2)
+	                    (/ (+ theta t) 2)
 	                    theta)]
-        ;;if a zero command was received, zero all keys that were in the zero map
-        (if @zero-map
+        ;;if a reset-coords command was received, do it
+        (if @reset-coords-map
           (do
-            (doseq [key (keys @zero-map)]
-              (if (contains? @last-state key)
-                (if-not (= key :t)
-                  (swap! last-state assoc key 0)
-                  (swap! last-state assoc key 1.570796))))
-            (reset! zero-map nil))
+            (reset! last-state {:x (:x @reset-coords-map) 
+                                :y (:y @reset-coords-map) 
+                                :t (t @reset-coords-map)})
+            (reset! reset-coords-map nil))
           
           ;;otherwise, update normally.
           (reset! last-state {:x x :y y :t theta}))
+        
 	      (recur l r (:x @last-state) (:y @last-state) (:t @last-state)))))
 	 
 
@@ -187,6 +185,27 @@
       (if me? 
 	      (reset! zero-map (dissoc cmd-map :command :ids)))))
  
+ 	(defn reset-coords-handler [cmd-map]
+	"the reset-coords command map should look something like this:
+		{:command reset-coords
+		 :ids [robot1]
+		 :x 2
+		 :y 5
+     :t 0}
+		if no reset-coords command is sent for a specific robot, its id is omitted from the ids vector
+		if all robots should reset, ids key is omitted from map"
+	  (let[ids (:ids cmd-map)
+	        x (:x cmd-map)
+	        y (:y cmd-map)
+	        t (:t cmd-map)
+	        my-id-str (name (:id properties))
+          ;;determine if local agent should execute command
+          me? (if-not ids 
+                true
+                (some (fn [x] (= my-id-str x)) ids))]
+      (if me? 
+	      (reset! reset-coords-map (dissoc cmd-map :command :ids)))))
+ 
  
  (defn led-handler [cmd-map]
 	"the led command map should look something like this:
@@ -247,8 +266,11 @@
 		    (= cmd "drive")
 		    (drive-handler cmd-map)
 	     
-		    (= cmd "zero")
-		    (zero-handler cmd-map)
+;		    (= cmd "zero")
+;		    (zero-handler cmd-map)
+
+        (= cmd "reset-coords")
+        (reset-coords-handler cmd-map)
       
         (= cmd "led")
 		    (led-handler cmd-map)
